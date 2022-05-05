@@ -17,16 +17,16 @@ func TestGetTask(t *testing.T) {
 	tsHTTP := &TaskService{Service: &ts}
 
 	// Mock Task() call.
-	ts.TaskFn = func(id int) (*domain.Task, error) {
-		if id != 100 {
-			t.Fatalf("unexpected id: %d", id)
+	ts.TaskFn = func(id string) (*domain.Task, error) {
+		if id != "317dafdc-9533-42ce-81d3-23126f4cbc0a" {
+			t.Fatalf("unexpected id: %s", id)
 		}
-		return &domain.Task{ID: 100, Name: "my-task-1"}, nil
+		return &domain.Task{ID: "317dafdc-9533-42ce-81d3-23126f4cbc0a", Name: "my-task-1"}, nil
 	}
 
 	// Invoke the handler.
 	w := httptest.NewRecorder()
-	r, _ := http.NewRequest("GET", "/tasks/100", nil)
+	r, _ := http.NewRequest("GET", "/tasks/317dafdc-9533-42ce-81d3-23126f4cbc0a", nil)
 
 	server := InitServer(&config.Config{Server: config.ServerConf{Port: 8080}})
 	server.RegisterRoutes(tsHTTP)
@@ -44,7 +44,7 @@ func TestGetTasks(t *testing.T) {
 
 	// Mock Tasks() call.
 	ts.TasksFn = func() ([]*domain.Task, error) {
-		return []*domain.Task{{ID: 100, Name: "my-task-1"}}, nil
+		return []*domain.Task{{ID: "317dafdc-9533-42ce-81d3-23126f4cbc0a", Name: "my-task-1"}}, nil
 	}
 
 	// Invoke the handler.
@@ -137,23 +137,23 @@ func TestDeleteTask(t *testing.T) {
 	tsHTTP := &TaskService{Service: &ts, AuthzClient: &ac}
 
 	// Mock DeleteTask() call.
-	ts.DeleteTaskFn = func(id int) error {
-		if id != 100 {
-			t.Fatalf("unexpected id: %d", id)
+	ts.DeleteTaskFn = func(id string) error {
+		if id != "317dafdc-9533-42ce-81d3-23126f4cbc0a" {
+			t.Fatalf("unexpected id: %s", id)
 		}
 		return nil
 	}
 	// Mock Task() call.
-	ts.TaskFn = func(id int) (*domain.Task, error) {
-		if id != 100 {
-			t.Fatalf("unexpected id: %d", id)
+	ts.TaskFn = func(id string) (*domain.Task, error) {
+		if id != "317dafdc-9533-42ce-81d3-23126f4cbc0a" {
+			t.Fatalf("unexpected id: %s", id)
 		}
-		return &domain.Task{ID: 100, Name: "my-task-1"}, nil
+		return &domain.Task{ID: "317dafdc-9533-42ce-81d3-23126f4cbc0a", Name: "my-task-1"}, nil
 	}
 
 	// Invoke the handler.
 	w := httptest.NewRecorder()
-	r, _ := http.NewRequest("DELETE", "/tasks/100", nil)
+	r, _ := http.NewRequest("DELETE", "/tasks/317dafdc-9533-42ce-81d3-23126f4cbc0a", nil)
 
 	server := InitServer(&config.Config{Server: config.ServerConf{Port: 8080}})
 	server.RegisterRoutes(tsHTTP)

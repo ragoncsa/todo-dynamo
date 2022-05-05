@@ -129,7 +129,7 @@
                 "summary": "Get task",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Task ID",
                         "name": "taskid",
                         "in": "path",
@@ -177,7 +177,7 @@
                 "summary": "Deletes task",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Task ID",
                         "name": "taskid",
                         "in": "path",
@@ -212,7 +212,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

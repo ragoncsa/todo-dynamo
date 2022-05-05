@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/ragoncsa/todo/authz"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/ragoncsa/todo/config"
 	"github.com/ragoncsa/todo/gorm"
 	"github.com/ragoncsa/todo/http"
+	"github.com/ragoncsa/todo/mock"
+
+	awsconf "github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/spf13/viper"
 
@@ -52,19 +56,20 @@ func loadConfig() *config.Config {
 
 func main() {
 	conf := loadConfig()
-	db, err := gorm.Connect(conf)
-	if err != nil {
-		panic("failed to connect database")
-	}
-	gorm.RunMigration(db)
 
 	docs.SwaggerInfo.BasePath = "/"
 
 	server := http.InitServer(conf)
-	tsDB := &gorm.TaskService{DB: db}
+	sdkConfig, err := awsconf.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		panic(fmt.Sprintf("unable to load SDK config, %v", err))
+	}
+	tsDB := &gorm.TaskService{DynamoDbClient: dynamodb.NewFromConfig(sdkConfig)}
 	tsHTTP := http.TaskService{
-		Service:     tsDB,
-		AuthzClient: authz.New(conf),
+		Service: tsDB,
+		// Removed authorization piece, since it's not relevant for this demo.
+		// AuthzClient: authz.New(conf),
+		AuthzClient: &mock.AlwaysAllow{},
 	}
 	server.RegisterRoutes(&tsHTTP)
 	server.Start()
