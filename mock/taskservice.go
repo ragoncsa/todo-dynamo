@@ -3,7 +3,7 @@ package mock
 import "github.com/ragoncsa/todo/domain"
 
 type TaskService struct {
-	TaskFn      func(id int) (*domain.Task, error)
+	TaskFn      func(id string) (*domain.Task, error)
 	TaskInvoked bool
 
 	TasksFn      func() ([]*domain.Task, error)
@@ -12,14 +12,14 @@ type TaskService struct {
 	CreateTaskFn      func(t *domain.Task) error
 	CreateTaskInvoked bool
 
-	DeleteTaskFn      func(id int) error
+	DeleteTaskFn      func(id string) error
 	DeleteTaskInvoked bool
 
 	DeleteTasksFn      func() error
 	DeleteTasksInvoked bool
 }
 
-func (s *TaskService) Task(id int) (*domain.Task, error) {
+func (s *TaskService) Task(id string) (*domain.Task, error) {
 	s.TaskInvoked = true
 	return s.TaskFn(id)
 }
@@ -34,7 +34,7 @@ func (s *TaskService) CreateTask(t *domain.Task) error {
 	return s.CreateTaskFn(t)
 }
 
-func (s *TaskService) DeleteTask(id int) error {
+func (s *TaskService) DeleteTask(id string) error {
 	s.DeleteTaskInvoked = true
 	return s.DeleteTaskFn(id)
 }

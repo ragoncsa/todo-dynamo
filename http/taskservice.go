@@ -3,7 +3,6 @@ package http
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,7 @@ type TaskService struct {
 // @Success      200      {array}   domain.Task
 // @Failure      default  {string}  string  "unexpected error"
 // @Router       /tasks/ [get]
-// @Param        CallerId  header  string  false "the id of the caller" "johndoe"
+// @Param        CallerId  header  string  false  "the id of the caller"  "johndoe"
 func (t *TaskService) GetTasks(c *gin.Context) {
 	tasks, err := t.Service.Tasks()
 	if err != nil {
@@ -38,7 +37,7 @@ func (t *TaskService) GetTasks(c *gin.Context) {
 	// inefficient way of sending authorization requests sequentially - ok for demoing
 	for _, v := range tasks {
 		dreq.Owner = v.UserId
-		dreq.TaskID = strconv.Itoa(v.ID)
+		dreq.TaskID = v.ID
 		allowed, err := t.AuthzClient.IsAllowed(dreq)
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
@@ -59,27 +58,23 @@ func (t *TaskService) GetTasks(c *gin.Context) {
 // @Tags         read
 // @Accept       json
 // @Produce      json
-// @Param        taskid   path      int  true  "Task ID"
+// @Param        taskid   path      string  true  "Task ID"
 // @Success      200      {object}  domain.Task
 // @Failure      401      {string}  string  "not found"
 // @Failure      default  {string}  string  "unexpected error"
 // @Router       /tasks/{taskid} [get]
-// @Param        CallerId  header  string  false "the id of the caller" "johndoe"
+// @Param        CallerId  header  string  false  "the id of the caller"  "johndoe"
 func (t *TaskService) GetTask(c *gin.Context) {
 	id := c.Param("taskid")
-	idInt, err := strconv.Atoi(id)
+	task, err := t.Service.Task(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "taskid must be an integer"})
-		return
-	}
-	task, err := t.Service.Task(idInt)
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %d not found", idInt)})
+		fmt.Printf("ERROR: %v\n", err)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %s not found", id)})
 		return
 	}
 	dreq := prepDecisionReq(c.Request)
 	dreq.Owner = task.UserId
-	dreq.TaskID = strconv.Itoa(task.ID)
+	dreq.TaskID = task.ID
 	allowed, err := t.AuthzClient.IsAllowed(dreq)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
@@ -100,8 +95,9 @@ func (t *TaskService) GetTask(c *gin.Context) {
 // @Param        task  body  CreateTaskRequest  true  "New task"
 // @Success      200
 // @Router       /tasks/ [post]
-// @Param        CallerId  header  string  false "the id of the caller" "johndoe"
+// @Param        CallerId  header  string  false  "the id of the caller"  "johndoe"
 func (t *TaskService) CreateTask(c *gin.Context) {
+	fmt.Printf("CreateTask HTTP\n")
 	var request CreateTaskRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -128,34 +124,28 @@ func (t *TaskService) CreateTask(c *gin.Context) {
 // @Tags         write
 // @Accept       json
 // @Produce      json
-// @Param        taskid  path  int  true  "Task ID"
+// @Param        taskid  path  string  true  "Task ID"
 // @Success      200
 // @Router       /tasks/{taskid} [delete]
-// @Param        CallerId  header  string  false "the id of the caller" "johndoe"
+// @Param        CallerId  header  string  false  "the id of the caller"  "johndoe"
 func (t *TaskService) DeleteTask(c *gin.Context) {
 	id := c.Param("taskid")
 
-	idInt, err := strconv.Atoi(id)
+	task, err := t.Service.Task(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "taskid must be an integer"})
-		return
-	}
-
-	task, err := t.Service.Task(idInt)
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %d not found", idInt)})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %s not found", id)})
 		return
 	}
 	dreq := prepDecisionReq(c.Request)
 	dreq.Owner = task.UserId
-	dreq.TaskID = strconv.Itoa(task.ID)
+	dreq.TaskID = task.ID
 	allowed, err := t.AuthzClient.IsAllowed(dreq)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 	} else if !allowed {
 		c.IndentedJSON(http.StatusForbidden, gin.H{"message": "forbidden"})
-	} else if err = t.Service.DeleteTask(idInt); err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %d not found", idInt)})
+	} else if err = t.Service.DeleteTask(id); err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("task with id %s not found", id)})
 	} else {
 		c.IndentedJSON(http.StatusOK, struct{}{})
 	}
@@ -170,7 +160,7 @@ func (t *TaskService) DeleteTask(c *gin.Context) {
 // @Produce      json
 // @Success      200
 // @Router       /tasks/ [delete]
-// @Param        CallerId  header  string  false "the id of the caller" "johndoe"
+// @Param        CallerId  header  string  false  "the id of the caller"  "johndoe"
 func (t *TaskService) DeleteTasks(c *gin.Context) {
 	dreq := prepDecisionReq(c.Request)
 	allowed, err := t.AuthzClient.IsAllowed(dreq)

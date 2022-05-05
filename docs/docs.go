@@ -136,7 +136,7 @@ const docTemplate = `{
                 "summary": "Get task",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Task ID",
                         "name": "taskid",
                         "in": "path",
@@ -184,7 +184,7 @@ const docTemplate = `{
                 "summary": "Deletes task",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Task ID",
                         "name": "taskid",
                         "in": "path",
@@ -219,7 +219,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

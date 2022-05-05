@@ -2,82 +2,46 @@
 
 ## Overview
 
-This is a sample application for REST service development with golang. Libraries used:
+This is a fork from https://github.com/ragoncsa/todo/tree/v0.1.1
+See its README https://github.com/ragoncsa/todo/blob/v0.1.1/README.md
 
-* [gorm](https://gorm.io/) as ORM library
-* [viper](https://github.com/spf13/viper) for configuration management
-* [gin](https://github.com/gin-gonic/gin) as web framework
-* [gin-swagger](https://github.com/swaggo/gin-swagger) to generate OpenAPI spec from go comments
-* [resty](https://github.com/go-resty/resty) for REST client implementation (for example to talk to OPA)
-* [Open Policy Agent (OPA)](https://www.openpolicyagent.org/) for authorization decisions
+This is an example how to port the "todo" demo project from gorm/postgres to Dynamo.
 
-![Alt text](assets/screenshot-swagger-ui.png?raw=true "Screenshot")
+**What's included:**
 
-## Run from container
+* removal of gorm dependency
+* implementation of the existing methods (Task, Tasks, DeleteTask, DeleteTasks) as is
 
-To build
+**What's not included:**
 
-`docker build -t todo .`
+* this only tries out Dynamo API, the implementation is inefficient (for example task ID as primary key is a bad choice, so is full table scan, or deleting all items one by one)
 
-Docker-compose starts the built container with a database
+## Create the DynamoDB table "Task" in AWS
 
-`docker-compose up`
-
-Go to Swagger UI <http://localhost:8080/swagger/index.html>
-
-
-### Reset the database
-
-`docker-compose down --volumes`
-
-## Run without container
-
-### Start dependencies
-
-```shell
-docker-compose up db
-opa build authz -o authz/bundle.tar.gz --ignore 'taskservice_authz_test.rego'
-docker-compose up bundle_server
-docker-compose up opa
+```bash
+source aws-creds-to-env.sh
+cd terraform
+terraform init
+terraform apply
 ```
 
-To access the database:
+For more see:
 
-```shell
-$ docker exec -it todo_db_1 /bin/bash                               
-root@187961c81d2e:/# psql -U postgres
-psql (14.2 (Debian 14.2-1.pgdg110+1))
-Type "help" for help.
+* [How to use AWS from Terraform](https://learn.hashicorp.com/tutorials/terraform/aws-build)
+* [Resource: aws_dynamodb_table](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table)
+
+## To start and test the service
+
+```bash
+go run main.go
 ```
 
-### Start the server
+http://localhost:8080/swagger/index.html
 
-`go run main.go`
+## Clean up
 
-Go to Swagger UI <http://localhost:8080/swagger/index.html>
-
-## Testing
-
-### Test the application
-
-`go test ./...`
-
-### Test the authorization rules
-
-Run unit tests
-
-`opa test authz -v --ignore '*.tar.gz'`
-
-Test rules on the server
-
-```shell
-echo "{\"input\": {\"method\":\"POST\",\"owner\":\"johndoe\",\"path\":[\"tasks\"],\"user\":\"johndoe\"}}" \
-| http -v POST http://127.0.0.1:8181/v1/data/authz
+```bash
+cd terraform
+terraform destroy
+unset AWS_ACCESS_KEY_ID && unset AWS_SECRET_ACCESS_KEY && unset AWS_SESSION_TOKEN
 ```
-
-## Generate OpenAPI spec
-
-`swag init`
-
-For more see: <https://github.com/swaggo/gin-swagger>
-

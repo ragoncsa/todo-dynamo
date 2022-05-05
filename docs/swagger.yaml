@@ -9,7 +9,7 @@ definitions:
       dueAt:
         type: string
       id:
-        type: integer
+        type: string
       name:
         type: string
       priority:
@@ -131,7 +131,7 @@ paths:
         in: path
         name: taskid
         required: true
-        type: integer
+        type: string
       - description: the id of the caller
         in: header
         name: CallerId
@@ -153,7 +153,7 @@ paths:
         in: path
         name: taskid
         required: true
-        type: integer
+        type: string
       - description: the id of the caller
         in: header
         name: CallerId

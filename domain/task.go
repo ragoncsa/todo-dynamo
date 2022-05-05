@@ -5,7 +5,7 @@ import (
 )
 
 type Task struct {
-	ID          int
+	ID          string
 	UserId      string
 	Name        string
 	Description string
@@ -16,9 +16,9 @@ type Task struct {
 }
 
 type TaskService interface {
-	Task(id int) (*Task, error)
+	Task(id string) (*Task, error)
 	Tasks() ([]*Task, error)
 	CreateTask(t *Task) error
-	DeleteTask(id int) error
+	DeleteTask(id string) error
 	DeleteTasks() error
 }
